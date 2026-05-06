@@ -5,8 +5,8 @@ def sanitize(path):
     # sanitize slashes (posix)
     path = posix(path)
     # sanitize ././
-    path = re.sub("^\/?(./)+", "./", path)
-    path = re.sub("^(\/)+", "/", path)
+    path = re.sub(r"^\/?(./)+", "./", path)
+    path = re.sub(r"^(\/)+", "/", path)
     return path
 
 def posix(path):
@@ -15,17 +15,17 @@ def posix(path):
     return path
 
 def is_relative(string):
-    return bool(re.match("(\.?\.\/)", string))
+    return bool(re.match(r"(\.?\.\/)", string))
 
 def is_absolute(string):
-    return bool(re.match("\/[A-Za-z0-9\_\-\s\.$]*", string))
+    return bool(re.match(r"\/[A-Za-z0-9\_\-\s\.$]*", string))
 
 def sanitize_base_directory(path):
     path = sanitize(path)
     path = os.path.dirname(path)
     # no leading nor trailing slash
-    path = re.sub("^\/*", "", path)
-    path = re.sub("\/*$", "", path)
+    path = re.sub(r"^\/*", "", path)
+    path = re.sub(r"\/*$", "", path)
     return path
 
 def get_absolute_path(base_path, relative_path):
@@ -41,7 +41,14 @@ def get_relative_folder(file_name, base_directory):
     folder = "" if folder == "." else folder
     return sanitize(folder)
 
+
+def normalize_wsl_path(path):
+    path = re.sub(r"^(\\\\|//)wsl\$(\\|/)", r"\1wsl.localhost\2", path)
+    return path
+
 def relative_to(base_directory, folder_path):
+    folder_path = normalize_wsl_path(folder_path)
+    base_directory = normalize_wsl_path(base_directory)
     folder = os.path.relpath(folder_path, base_directory)
     return sanitize(folder)
 
@@ -74,6 +81,6 @@ def trace(from_folder, to_folder):
 
     result += "/".join(targets)
     # !Do Debug "//"
-    result = re.sub("//", "/", result);
+    result = re.sub(r"//", "/", result)
 
     return result
